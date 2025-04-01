@@ -1,5 +1,9 @@
+from sys import hash_info
+
 import flet as ft
 
+import database.corso_DAO
+from database.corso_DAO import *
 
 class View(ft.UserControl):
     def __init__(self, page: ft.Page):
@@ -13,34 +17,60 @@ class View(ft.UserControl):
         self._controller = None
         # graphical elements
         self._title = None
-        self.txt_name = None
-        self.btn_hello = None
-        self.txt_result = None
-        self.txt_container = None
+        self._txt_nome = None
+        self._txt_result = None
+        self._txt_container = None
+        self._corso = None
+        self._btn_CercaI = None
+        self._txt_cognome = None
+        self._txt_matricola = None
+        self._btn_iscrivi = None
+        self._btn_cercaC = None
+        self._btn_cercaS = None
 
     def load_interface(self):
         """Function that loads the graphical elements of the view"""
         # title
-        self._title = ft.Text("Hello World", color="blue", size=24)
-        self._page.controls.append(self._title)
+        self._title = ft.Text("App Gestione Studenti", color="blue", size=24)
 
-        #ROW with some controls
-        # text field for the name
-        self.txt_name = ft.TextField(
-            label="name",
+        #ROW 0
+        self._corso=ft.Dropdown(label="corso",width=600, hint_text="Selezionare un corso")
+        self._btn_CercaI=ft.ElevatedButton(text="Cerca Iscritti",on_click=self._controller.handleCercaIscritti)
+
+        self.fillCorsi()
+
+        row0=ft.Row([self._corso,self._btn_CercaI],alignment=ft.MainAxisAlignment.CENTER)
+
+        #ROW 1
+        self._txt_matricola = ft.TextField(
+            label="matricola",
             width=200,
-            hint_text="Insert a your name"
+            hint_text="Inserisci la matricola"
         )
+        self._txt_nome = ft.TextField(
+            label="nome",
+            width=300,
+            read_only=True
+        )
+        self._txt_cognome = ft.TextField(
+            label="cognome",
+            width=300,
+            read_only=True
+        )
+        row1 = ft.Row([self._txt_matricola,self._txt_nome,self._txt_cognome], alignment=ft.MainAxisAlignment.CENTER)
 
-        # button for the "hello" reply
-        self.btn_hello = ft.ElevatedButton(text="Hello", on_click=self._controller.handle_hello)
-        row1 = ft.Row([self.txt_name, self.btn_hello],
-                      alignment=ft.MainAxisAlignment.CENTER)
-        self._page.controls.append(row1)
+        # ROW 2
+        self._btn_cercaS = ft.ElevatedButton(text="Cerca studente", on_click=self._controller.handleCercaStudente)
+        self._btn_cercaC = ft.ElevatedButton(text="Cerca corsi", on_click=self._controller.handleCercaCorsi)
+        self._btn_iscrivi = ft.ElevatedButton(text="Iscrivi", on_click=self._controller.handleIscrivi)
+
+        row2=ft.Row([self._btn_cercaS,self._btn_cercaC,self._btn_iscrivi], alignment=ft.MainAxisAlignment.CENTER)
 
         # List View where the reply is printed
-        self.txt_result = ft.ListView(expand=1, spacing=10, padding=20, auto_scroll=True)
-        self._page.controls.append(self.txt_result)
+        self._txt_result = ft.ListView(expand=1, spacing=10, padding=20, auto_scroll=True)
+
+        # Add all the elements
+        self._page.add(self._title, row0, row1, row2, self._txt_result)
         self._page.update()
 
     @property
@@ -64,3 +94,9 @@ class View(ft.UserControl):
 
     def update_page(self):
         self._page.update()
+
+    def fillCorsi(self):
+        dao = CorsiDAO()  # Create an instance
+        corsi = dao.getAllCorsi()  # Call the method
+        for i in range(len(corsi)):
+            self._corso.options.append(ft.dropdown.Option(key=corsi[i]._codice, text=corsi[i].__str__()))
